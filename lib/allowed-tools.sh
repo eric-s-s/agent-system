@@ -2,6 +2,7 @@
 
 # Git — specific commands, no push/reset/remote
 GIT_TOOLS="Bash(git add:*) Bash(git rm:*) Bash(git commit:*) Bash(git diff:*) Bash(git log:*) Bash(git status:*) Bash(git branch:*) Bash(git checkout:*) Bash(git show:*) Bash(git stash:*) Bash(git rev-parse:*)"
+GIT_READ_TOOLS="Bash(git add:*) Bash(git rm:*) Bash(git diff:*) Bash(git log:*) Bash(git status:*) Bash(git branch:*) Bash(git checkout:*) Bash(git show:*) Bash(git rev-parse:*)"
 
 # Shell — commands for exploring and light manipulation in the codebase
 SHELL_TOOLS="Bash(ls:*) Bash(cat:*) Bash(head:*) Bash(tail:*) Bash(wc:*) Bash(mkdir:*) Bash(grep:*) Bash(find:*) Bash(tree:*) Bash(sort:*) Bash(uniq:*) Bash(diff:*) Bash(file:*) Bash(xargs:*) Bash(awk:*) Bash(sed:*) Bash(cut:*) Bash(tr:*) Bash(echo:*) Bash(tee:*)"
@@ -13,4 +14,4 @@ CODEX_TOOLS="Bash(codex review:*)"
 FILE_TOOLS="Edit Write Read Glob Grep"
 
 # Python — uv, ruff, pytest, python
-PYTHON_TOOLS="Bash(uv:*) Bash(ruff:*) Bash(python:*) Bash(pytest:*)"
+PYTHON_TOOLS="Bash(uv:*) Bash(ruff:*) Bash(python:*) Bash(pytest:*) Bash(workon datarobot)"
