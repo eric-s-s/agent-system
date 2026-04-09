@@ -19,3 +19,7 @@
 
 - Prefer normal git commands. Avoid `git -C`.
 - No tests in this repo.
+
+## Plans
+
+- When working in `~/workspace/DataRobot`, write and commit all plans to `/home/eric-shaw/workspace/dr-repo-claude-plans` instead of `claude_plans`.

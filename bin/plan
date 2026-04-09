@@ -27,6 +27,14 @@ fi
 # Canonicalize to absolute path so cleanup works after cd
 CLONE_DIR="$(cd "$CLONE_DIR" && pwd)"
 
+# --- Detect DataRobot context ---
+DR_PLANS_DIR="/home/eric-shaw/workspace/dr-repo-claude-plans"
+if [[ "$CLONE_DIR" == /home/eric-shaw/workspace/DataRobot* ]]; then
+    PLANS_DIR="$DR_PLANS_DIR"
+else
+    PLANS_DIR="claude_plans"
+fi
+
 if [[ ! -f "$PROMPT_FILE" ]]; then
     echo "ERROR: Prompt not found at $PROMPT_FILE"
     exit 1
@@ -59,9 +67,15 @@ trap cleanup EXIT
 
 # --- Build user prompt ---
 if [[ -n "$FEATURE_NAME" ]]; then
-    USER_PROMPT="I want to plan '${FEATURE_NAME}'. The plan should end up at docs/${FEATURE_NAME}.md. Let's get started — what do you need to know?"
+    USER_PROMPT="I want to plan '${FEATURE_NAME}'. The plan should end up in ${PLANS_DIR}/. Let's get started — what do you need to know?"
 else
-    USER_PROMPT="I want to plan a feature. Before we start, ask me the name of what we're building. The plan should end up at docs/<feature-name>.md. Let's get started — what do you need to know?"
+    USER_PROMPT="I want to plan a feature. Before we start, ask me the name of what we're building. The plan should end up in ${PLANS_DIR}/. Let's get started — what do you need to know?"
+fi
+
+# --- Build system prompt ---
+SYSTEM_PROMPT="$(cat "$PROMPT_FILE")"
+if [[ "$PLANS_DIR" == "$DR_PLANS_DIR" ]]; then
+    SYSTEM_PROMPT+=$'\n\nIMPORTANT: This is a DataRobot repo. Write and commit ALL plans to '"${DR_PLANS_DIR}/"$' — NOT to claude_plans/ in this repo. When running the review command, use the full path: /review '"${DR_PLANS_DIR}/"$'<filename>.md'
 fi
 
 echo "==> Starting plan session in $CLONE_DIR"
@@ -71,7 +85,7 @@ cd "$CLONE_DIR"
 set +e
 claude \
     --permission-mode acceptEdits \
-    --append-system-prompt "$(cat "$PROMPT_FILE")" \
+    --append-system-prompt "$SYSTEM_PROMPT" \
     --allowedTools "$GIT_READ_TOOLS $SHELL_TOOLS $REVIEW_TOOLS $FILE_TOOLS" \
     "$USER_PROMPT"
 AGENT_EXIT_CODE=$?
