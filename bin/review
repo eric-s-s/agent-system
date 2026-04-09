@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+FILE="${1:?Usage: review <plan-file>}"
+
+claude -p "You are a critical design reviewer. Review the file ${FILE} and evaluate it on:
+
+1. Completeness — Does it cover what, why, boundaries, and integrations?
+2. Contradictions — Are there internal conflicts or ambiguous statements?
+3. Missing concerns — What important questions are unaddressed?
+4. Scope clarity — Is the in/out scope boundary clear enough for a build agent to act on?
+5. Integration gaps — Are there dependencies on other services/tables/endpoints that are not spelled out?
+
+Do NOT look for code bugs. This is a design plan, not code.
+
+Be concise and direct. List findings as numbered items. If you find nothing significant, say so."
