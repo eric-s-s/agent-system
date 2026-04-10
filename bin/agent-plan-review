@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-FILE="${1:?Usage: review <plan-file>}"
+FILE="${1:?Usage: agent-plan-review <plan-file>}"
 
 claude -p "You are a critical design reviewer. Review the file ${FILE} and evaluate it on:
 

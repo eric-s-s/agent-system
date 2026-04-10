@@ -24,7 +24,13 @@ Works with any Python repo that uses [uv](https://docs.astral.sh/uv/) for depend
    # special-repo=git@github.com:other-org
    ```
 
-3. (Optional) Add env vars and VS Code settings for your repos:
+3. Add `bin/` to your PATH so agent tools are available globally:
+   ```bash
+   export PATH="$PATH:/path/to/agent-system/bin"
+   ```
+   Add this to your `~/.bashrc` or `~/.zshrc` to persist across sessions.
+
+4. (Optional) Add env vars and VS Code settings for your repos:
    - `.env.my-app` — copied into clones as `.env`
    - `.vscode.my-app/` — copied into clones as `.vscode/`
 
@@ -118,11 +124,13 @@ Tool definitions live in `lib/allowed-tools.sh`.
 ```
 agent-system/
 ├── bin/
-│   ├── clone           # Clone repo, setup env and vscode
-│   ├── plan            # Launch plan agent
-│   ├── build           # Launch build agent
-│   ├── hack            # Launch hack agent
-│   └── status          # Show active features dashboard
+│   ├── clone               # Clone repo, setup env and vscode
+│   ├── plan                # Launch plan agent
+│   ├── build               # Launch build agent
+│   ├── hack                # Launch hack agent
+│   ├── status              # Show active features dashboard
+│   ├── agent-plan-review   # Review a plan doc for design completeness
+│   └── agent-code-review   # Review code changes vs main/master
 ├── lib/
 │   ├── allowed-tools.sh    # Shared tool permission definitions
 │   └── agent-session.sh    # Session tracking helpers

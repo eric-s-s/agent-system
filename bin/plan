@@ -75,7 +75,7 @@ fi
 # --- Build system prompt ---
 SYSTEM_PROMPT="$(cat "$PROMPT_FILE")"
 if [[ "$PLANS_DIR" == "$DR_PLANS_DIR" ]]; then
-    SYSTEM_PROMPT+=$'\n\nIMPORTANT: This is a DataRobot repo. Write and commit ALL plans to '"${DR_PLANS_DIR}/"$' — NOT to claude_plans/ in this repo. When running the review command, use the full path: /review '"${DR_PLANS_DIR}/"$'<filename>.md'
+    SYSTEM_PROMPT+=$'\n\nIMPORTANT: This is a DataRobot repo. Write and commit ALL plans to '"${DR_PLANS_DIR}/"$' — NOT to claude_plans/ in this repo. When running the review command, use the full path: agent-plan-review '"${DR_PLANS_DIR}/"$'<filename>.md'
 fi
 
 echo "==> Starting plan session in $CLONE_DIR"
