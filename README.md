@@ -12,7 +12,7 @@ Works with any Python repo that uses [uv](https://docs.astral.sh/uv/) for depend
    ```
    workspace/
    ├── agent-system/      # this repo
-   ├── my-app-feature-1/  # ephemeral clone (created by bin/clone)
+   ├── my-app-feature-1/  # ephemeral clone (created by bin/agent-clone)
    └── my-app-feature-2/  # another ephemeral clone
    ```
 
@@ -43,7 +43,7 @@ Works with any Python repo that uses [uv](https://docs.astral.sh/uv/) for depend
 - Reads the codebase to ask informed questions about boundaries and integrations
 - Writes the plan to `docs/` in the repo
 - Gets peer review from Codex before committing
-- `bin/plan <clone-dir> [feature-name]`
+- `bin/agent-plan <clone-dir> [feature-name]`
 
 ### Build Agent
 - Gets a plan describing what to build
@@ -54,12 +54,12 @@ Works with any Python repo that uses [uv](https://docs.astral.sh/uv/) for depend
 - Builds incrementally — commits after each meaningful chunk
 - Does NOT push — the human reviews commits and pushes when ready
 - Test-first with fakes, then implementation. Must pass `ruff check` + `ruff format` + `pytest`
-- `bin/build <clone-dir>`
+- `bin/agent-build <clone-dir>`
 
 ### Hack Agent
 - For exploratory work, debugging, UI iteration, and small changes that don't need a plan doc
 - Interactive conversation to design the approach, then autonomous build
-- `bin/hack <clone-dir>`
+- `bin/agent-hack <clone-dir>`
 
 ### Peer Reviewer (Codex)
 - A different frontier model — different strengths, different blind spots, that's the point
@@ -71,7 +71,7 @@ Works with any Python repo that uses [uv](https://docs.astral.sh/uv/) for depend
 
 ### 1. Clone
 ```bash
-bin/clone <repo-name> [feature-name]
+bin/agent-clone <repo-name> [feature-name]
 ```
 - Clones into `<repo-name>-<feature-name>/` (or `<repo-name>-1/`, `<repo-name>-2/` if no feature name)
 - Stays on main
@@ -81,7 +81,7 @@ bin/clone <repo-name> [feature-name]
 
 ### 2. Plan
 ```bash
-bin/plan <clone-dir> [feature-name]
+bin/agent-plan <clone-dir> [feature-name]
 ```
 - Interactive conversation to plan the feature
 - Plan lands in `docs/<feature-name>.md`
@@ -89,7 +89,7 @@ bin/plan <clone-dir> [feature-name]
 
 ### 3. Build
 ```bash
-bin/build <clone-dir>
+bin/agent-build <clone-dir>
 ```
 - Build agent reads the plan, reads the codebase, builds the thing
 - Commits incrementally, consults Codex for review
@@ -98,7 +98,7 @@ bin/build <clone-dir>
 
 ### 4. Status
 ```bash
-bin/status
+bin/agent-status
 ```
 - Shows all active ephemeral clones, their agent state, and progress
 
