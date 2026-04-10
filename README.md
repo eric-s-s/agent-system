@@ -49,14 +49,12 @@ Works with any Python repo that uses [uv](https://docs.astral.sh/uv/) for depend
 
 ### Build Agent
 - Gets a plan describing what to build
-- Works in its own ephemeral clone
-- Pings Codex for peer review via `codex review --base main`
 - **Acts on feedback** — from the peer reviewer or the human. The build agent is the one who fixes the code.
 - **Keeps the plan up to date** — if the design shifts during the build, the plan gets updated
 - Builds incrementally — commits after each meaningful chunk
 - Does NOT push — the human reviews commits and pushes when ready
 - Test-first with fakes, then implementation. Must pass `ruff check` + `ruff format` + `pytest`
-- `bin/agent-build <clone-dir>`
+- `bin/agent-build [code-dir] <plan-file>`
 
 ### Hack Agent
 - For exploratory work, debugging, UI iteration, and small changes that don't need a plan doc
@@ -93,10 +91,13 @@ bin/agent-plan [plans-dir]
 
 ### 3. Build
 ```bash
-bin/agent-build <clone-dir>
+bin/agent-build [code-dir] <plan-file>
 ```
+- `code-dir` is optional — defaults to the current directory if omitted
+- `plan-file` is required — prompted with tab completion if omitted
+- Confirms directory, branch, and plan file with you before starting
 - Build agent reads the plan, reads the codebase, builds the thing
-- Commits incrementally, consults Codex for review
+- Commits incrementally, gets peer review via `agent-code-review --claude`
 - Human reviews commits when done: `git log --oneline main..HEAD`
 - Human pushes when satisfied: `git push`
 
