@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Parse flags
+USE_CLAUDE=false
+for arg in "$@"; do
+    case "$arg" in
+        --claude) USE_CLAUDE=true ;;
+        *) echo "Usage: agent-code-review --claude" >&2; exit 1 ;;
+    esac
+done
+
+if [[ "$USE_CLAUDE" == false ]]; then
+    echo "Usage: agent-code-review --claude" >&2
+    exit 1
+fi
+
+# Detect base branch
+BASE_BRANCH=""
+for branch in main master; do
+    if git rev-parse --verify "$branch" &>/dev/null; then
+        BASE_BRANCH="$branch"
+        break
+    fi
+done
+
+if [[ -z "$BASE_BRANCH" ]]; then
+    echo "ERROR: Could not find main or master branch" >&2
+    exit 1
+fi
+
+# Write diff to temp file
+DIFF_FILE=$(mktemp /tmp/agent-code-review-XXXXXX.diff)
+trap "rm -f '$DIFF_FILE'" EXIT
+git diff "${BASE_BRANCH}...HEAD" > "$DIFF_FILE"
+
+if [[ ! -s "$DIFF_FILE" ]]; then
+    echo "No changes vs ${BASE_BRANCH}. Nothing to review."
+    exit 0
+fi
+
+claude -p "You are a senior engineer doing a thorough code review.
+
+Read the git diff at: ${DIFF_FILE}
+
+Focus on:
+1. Correctness — logic errors, off-by-one, missing edge cases
+2. Security — injection, auth issues, exposed secrets, unsafe operations
+3. Test coverage — are the important paths tested?
+4. Code quality — naming, complexity, unnecessary duplication
+5. Integration — does this interact correctly with the rest of the system?
+
+Be specific. Quote relevant lines. Label each finding: MUST-FIX, SUGGESTION, or NITPICK.
+If there are no significant issues, say so clearly."

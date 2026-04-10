@@ -8,7 +8,7 @@ GIT_READ_TOOLS="Bash(git add:*) Bash(git rm:*) Bash(git diff:*) Bash(git log:*) 
 SHELL_TOOLS="Bash(ls:*) Bash(cat:*) Bash(head:*) Bash(tail:*) Bash(wc:*) Bash(mkdir:*) Bash(grep:*) Bash(find:*) Bash(tree:*) Bash(sort:*) Bash(uniq:*) Bash(diff:*) Bash(file:*) Bash(xargs:*) Bash(awk:*) Bash(sed:*) Bash(cut:*) Bash(tr:*) Bash(echo:*) Bash(tee:*)"
 
 # Review — peer review via separate Claude instance
-REVIEW_TOOLS="Bash(review:*)"
+REVIEW_TOOLS="Bash(review:*) Bash(agent-code-review:*)"
 
 # Claude Code file tools
 FILE_TOOLS="Edit Write Read Glob Grep"
