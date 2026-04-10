@@ -43,8 +43,9 @@ Works with any Python repo that uses [uv](https://docs.astral.sh/uv/) for depend
 - Reads the codebase to ask informed questions about boundaries and integrations
 - Derives the plan filename from the branch: `<yyyy-mm-dd>-<ticket>-<feature-name>.md`
 - Branch must follow the format `<user>/<ticket>/<feature-name>` or the agent will refuse to start
+- Plans directory is passed as an argument (relative or absolute); prompts with tab completion if omitted
 - Gets peer review from a separate Claude instance before committing
-- `bin/agent-plan`
+- `bin/agent-plan [plans-dir]`
 
 ### Build Agent
 - Gets a plan describing what to build
@@ -82,11 +83,12 @@ bin/agent-clone <repo-name> [feature-name]
 
 ### 2. Plan
 ```bash
-bin/agent-plan
+bin/agent-plan [plans-dir]
 ```
-- Run from inside the feature branch — no arguments needed
+- Run from inside the feature branch
 - Branch must follow `<user>/<ticket>/<feature-name>` (e.g. `eric-shaw/PROJ-123/add-oauth-login`)
-- Plan is written to `claude_plans/<yyyy-mm-dd>-<ticket>-<feature-name>.md`
+- `plans-dir` is the directory to write the plan into — relative or absolute. If omitted, you'll be prompted with tab completion starting from the current directory.
+- Plan is written to `<plans-dir>/<yyyy-mm-dd>-<ticket>-<feature-name>.md`
 - A separate Claude instance reviews the plan before commit
 
 ### 3. Build

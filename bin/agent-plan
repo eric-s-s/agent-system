@@ -37,13 +37,17 @@ fi
 TODAY="$(date +%Y-%m-%d)"
 PLAN_FILE="${TODAY}-${BRANCH_TICKET}-${BRANCH_FEATURE}.md"
 
-# --- Detect DataRobot context ---
-DR_PLANS_DIR="/home/eric-shaw/workspace/dr-repo-claude-plans"
-if [[ "$REPO_DIR" == /home/eric-shaw/workspace/DataRobot* ]]; then
-    PLANS_DIR="$DR_PLANS_DIR"
-else
-    PLANS_DIR="claude_plans"
+# --- Get plans directory (arg or interactive prompt) ---
+PLANS_DIR="${1:-}"
+if [[ -z "$PLANS_DIR" ]]; then
+    read -e -p "Plans directory: " -i "${REPO_DIR}/" PLANS_DIR
 fi
+
+# Resolve relative path against REPO_DIR
+if [[ "${PLANS_DIR:0:1}" != "/" ]]; then
+    PLANS_DIR="${REPO_DIR}/${PLANS_DIR}"
+fi
+PLANS_DIR="${PLANS_DIR%/}"
 
 if [[ ! -f "$PROMPT_FILE" ]]; then
     echo "ERROR: Prompt not found at $PROMPT_FILE"
@@ -78,16 +82,10 @@ echo "    Branch:    $BRANCH"
 echo "    Plan file: ${PLANS_DIR}/${PLAN_FILE}"
 echo ""
 
-# --- Build system prompt ---
-SYSTEM_PROMPT="$(cat "$PROMPT_FILE")"
-if [[ "$PLANS_DIR" == "$DR_PLANS_DIR" ]]; then
-    SYSTEM_PROMPT+=$'\n\nIMPORTANT: This is a DataRobot repo. Write and commit ALL plans to '"${DR_PLANS_DIR}/"$' — NOT to claude_plans/ in this repo. When running the review command, use the full path: agent-plan-review '"${DR_PLANS_DIR}/"$'<filename>.md'
-fi
-
 set +e
 claude \
     --permission-mode acceptEdits \
-    --append-system-prompt "$SYSTEM_PROMPT" \
+    --append-system-prompt "$(cat "$PROMPT_FILE")" \
     --allowedTools "$GIT_READ_TOOLS $SHELL_TOOLS $REVIEW_TOOLS $FILE_TOOLS" \
     "I want to plan '${BRANCH_FEATURE}' (ticket: ${BRANCH_TICKET}). Write the plan to ${PLANS_DIR}/${PLAN_FILE}. Let's get started — what do you need to know?"
 AGENT_EXIT_CODE=$?
