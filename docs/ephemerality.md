@@ -24,17 +24,17 @@ These changes were made during the planning session because they're context-depe
 
 ## What's Left for the Build Agent (mechanical work)
 
-- Rename `bin/task` → `bin/hack` and update all internal strings: usage text, tab title (`TASK:` → `HACK:`), `agent=task` → `agent=hack` in session writes
+- Rename `bin/task` → `bin/agent-hack` and update all internal strings: usage text, tab title (`TASK:` → `HACK:`), `agent=task` → `agent=hack` in session writes
 - Rename `prompts/task-agent.md` → `prompts/hack-agent.md`
-- Update README: agent descriptions (Task Agent → Hack Agent), workflow section (`bin/task` → `bin/hack`), file tree listing (`task` → `hack` in both `bin/` and `prompts/`)
-- Update `bin/status` references from `task` → `hack` (agent type display, coloring)
+- Update README: agent descriptions (Task Agent → Hack Agent), workflow section (`bin/task` → `bin/agent-hack`), file tree listing (`task` → `hack` in both `bin/` and `prompts/`)
+- Update `bin/agent-status` references from `task` → `hack` (agent type display, coloring)
 - Update any references in `lib/agent-session.sh` or `lib/allowed-tools.sh` if they mention task
 - Update `docs/multi-org-clone.md` — references `bin/task` in its out-of-scope section
 
 ## Out of Scope
 
 - No new features or scripts
-- No changes to `bin/clone` or `bin/build`
+- No changes to `bin/agent-clone` or `bin/agent-build`
 - No changes to the build agent prompt (but noted as a future recommendation: add a pre-flight scope check where the build agent reads the plan and gut-checks whether the work fits in one session before starting)
 - No temp-docs feature (punted)
 - No context-monitoring in hack agent (future work — agent tracks its own context health and flags when the session is getting long)
@@ -49,33 +49,33 @@ These changes were made during the planning session because they're context-depe
 
 ## Implementation Notes
 
-- `bin/status` had no task-specific references — the agent label is read dynamically from `.agent-session` and uppercased. Sessions started with `bin/hack` will display as `HACK` automatically. No code changes needed.
+- `bin/agent-status` had no task-specific references — the agent label is read dynamically from `.agent-session` and uppercased. Sessions started with `bin/agent-hack` will display as `HACK` automatically. No code changes needed.
 - `lib/agent-session.sh` and `lib/allowed-tools.sh` had no task references. No changes needed.
 
 ## What to Test
 
-**Files changed:** `bin/hack` (renamed from `bin/task`), `prompts/hack-agent.md` (renamed from `prompts/task-agent.md`), `README.md`, `docs/multi-org-clone.md`.
+**Files changed:** `bin/agent-hack` (renamed from `bin/task`), `prompts/hack-agent.md` (renamed from `prompts/task-agent.md`), `README.md`, `docs/multi-org-clone.md`.
 
 **Happy path:**
-- Run `bin/hack <clone-dir>` — should launch a claude session with the hack agent prompt
+- Run `bin/agent-hack <clone-dir>` — should launch a claude session with the hack agent prompt
 - Tab title should show `HACK: <feature-or-dir-name>`
 - `.agent-session` in the target dir should contain `agent=hack`
 - After session ends, `.agent-session` should show `state=done`
 
 **Status dashboard:**
-- Run `bin/status` after starting a hack session — agent column should show `HACK`
+- Run `bin/agent-status` after starting a hack session — agent column should show `HACK`
 
 **Prompt content:**
 - `prompts/hack-agent.md` should have the rewritten opening paragraph (exploratory work, debugging, UI iteration)
 - Plan agent prompt (`prompts/plan.md`) should have Scope Awareness and Thread Tracking sections
 
 **Docs:**
-- README shows "Hack Agent" (not "Task Agent"), `bin/hack`, and `hack-agent.md` in file tree
-- `docs/multi-org-clone.md` references `bin/hack` (not `bin/task`)
+- README shows "Hack Agent" (not "Task Agent"), `bin/agent-hack`, and `hack-agent.md` in file tree
+- `docs/multi-org-clone.md` references `bin/agent-hack` (not `bin/task`)
 
 **Error case:**
-- Run `bin/hack` with no args — should show `Usage: hack <directory>`
-- Run `bin/hack nonexistent-dir` — should show directory not found error
+- Run `bin/agent-hack` with no args — should show `Usage: hack <directory>`
+- Run `bin/agent-hack nonexistent-dir` — should show directory not found error
 
 ## Open Questions
 

@@ -12,7 +12,7 @@ Works with any Python repo that uses [uv](https://docs.astral.sh/uv/) for depend
    ```
    workspace/
    ├── agent-system/      # this repo
-   ├── my-app-feature-1/  # ephemeral clone (created by bin/clone)
+   ├── my-app-feature-1/  # ephemeral clone (created by bin/agent-clone)
    └── my-app-feature-2/  # another ephemeral clone
    ```
 
@@ -24,7 +24,13 @@ Works with any Python repo that uses [uv](https://docs.astral.sh/uv/) for depend
    # special-repo=git@github.com:other-org
    ```
 
-3. (Optional) Add env vars and VS Code settings for your repos:
+3. Add `bin/` to your PATH so agent tools are available globally:
+   ```bash
+   export PATH="$PATH:/path/to/agent-system/bin"
+   ```
+   Add this to your `~/.bashrc` or `~/.zshrc` to persist across sessions.
+
+4. (Optional) Add env vars and VS Code settings for your repos:
    - `.env.my-app` — copied into clones as `.env`
    - `.vscode.my-app/` — copied into clones as `.vscode/`
 
@@ -35,25 +41,25 @@ Works with any Python repo that uses [uv](https://docs.astral.sh/uv/) for depend
 ### Plan Agent
 - Interactive session where the human and agent plan a feature together
 - Reads the codebase to ask informed questions about boundaries and integrations
-- Writes the plan to `docs/` in the repo
-- Gets peer review from Codex before committing
-- `bin/plan <clone-dir> [feature-name]`
+- Derives the plan filename from the branch: `<yyyy-mm-dd>-<ticket>-<feature-name>.md`
+- Branch must follow the format `<user>/<ticket>/<feature-name>` or the agent will refuse to start
+- Plans directory is passed as an argument (relative or absolute); prompts with tab completion if omitted
+- Gets peer review from a separate Claude instance before committing
+- `bin/agent-plan [plans-dir]`
 
 ### Build Agent
 - Gets a plan describing what to build
-- Works in its own ephemeral clone
-- Pings Codex for peer review via `codex review --base main`
 - **Acts on feedback** — from the peer reviewer or the human. The build agent is the one who fixes the code.
 - **Keeps the plan up to date** — if the design shifts during the build, the plan gets updated
 - Builds incrementally — commits after each meaningful chunk
 - Does NOT push — the human reviews commits and pushes when ready
 - Test-first with fakes, then implementation. Must pass `ruff check` + `ruff format` + `pytest`
-- `bin/build <clone-dir>`
+- `bin/agent-build [code-dir] <plan-file>`
 
 ### Hack Agent
 - For exploratory work, debugging, UI iteration, and small changes that don't need a plan doc
 - Interactive conversation to design the approach, then autonomous build
-- `bin/hack <clone-dir>`
+- `bin/agent-hack <clone-dir>`
 
 ### Peer Reviewer (Codex)
 - A different frontier model — different strengths, different blind spots, that's the point
@@ -65,7 +71,7 @@ Works with any Python repo that uses [uv](https://docs.astral.sh/uv/) for depend
 
 ### 1. Clone
 ```bash
-bin/clone <repo-name> [feature-name]
+bin/agent-clone <repo-name> [feature-name]
 ```
 - Clones into `<repo-name>-<feature-name>/` (or `<repo-name>-1/`, `<repo-name>-2/` if no feature name)
 - Stays on main
@@ -75,24 +81,29 @@ bin/clone <repo-name> [feature-name]
 
 ### 2. Plan
 ```bash
-bin/plan <clone-dir> [feature-name]
+bin/agent-plan [plans-dir]
 ```
-- Interactive conversation to plan the feature
-- Plan lands in `docs/<feature-name>.md`
-- Codex reviews the plan before commit
+- Run from inside the feature branch
+- Branch must follow `<user>/<ticket>/<feature-name>` (e.g. `eric-shaw/PROJ-123/add-oauth-login`)
+- `plans-dir` is the directory to write the plan into — relative or absolute. If omitted, you'll be prompted with tab completion starting from the current directory.
+- Plan is written to `<plans-dir>/<yyyy-mm-dd>-<ticket>-<feature-name>.md`
+- A separate Claude instance reviews the plan before commit
 
 ### 3. Build
 ```bash
-bin/build <clone-dir>
+bin/agent-build [code-dir] <plan-file>
 ```
+- `code-dir` is optional — defaults to the current directory if omitted
+- `plan-file` is required — prompted with tab completion if omitted
+- Confirms directory, branch, and plan file with you before starting
 - Build agent reads the plan, reads the codebase, builds the thing
-- Commits incrementally, consults Codex for review
+- Commits incrementally, gets peer review via `agent-code-review --claude`
 - Human reviews commits when done: `git log --oneline main..HEAD`
 - Human pushes when satisfied: `git push`
 
 ### 4. Status
 ```bash
-bin/status
+bin/agent-status
 ```
 - Shows all active ephemeral clones, their agent state, and progress
 
@@ -118,11 +129,13 @@ Tool definitions live in `lib/allowed-tools.sh`.
 ```
 agent-system/
 ├── bin/
-│   ├── clone           # Clone repo, setup env and vscode
-│   ├── plan            # Launch plan agent
-│   ├── build           # Launch build agent
-│   ├── hack            # Launch hack agent
-│   └── status          # Show active features dashboard
+│   ├── clone               # Clone repo, setup env and vscode
+│   ├── plan                # Launch plan agent
+│   ├── build               # Launch build agent
+│   ├── hack                # Launch hack agent
+│   ├── status              # Show active features dashboard
+│   ├── agent-plan-review   # Review a plan doc for design completeness
+│   └── agent-code-review   # Review code changes vs main/master
 ├── lib/
 │   ├── allowed-tools.sh    # Shared tool permission definitions
 │   └── agent-session.sh    # Session tracking helpers

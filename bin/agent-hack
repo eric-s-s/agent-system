@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TARGET_DIR="${1:?Usage: hack <directory>}"
+TARGET_DIR="${1:?Usage: agent-hack <directory>}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 AGENT_SYSTEM_DIR="$(dirname "$SCRIPT_DIR")"
 WORKSPACE="$(dirname "$AGENT_SYSTEM_DIR")"
@@ -60,7 +60,7 @@ set +e
 claude \
     --permission-mode acceptEdits \
     --append-system-prompt "$(cat "$PROMPT_FILE")" \
-    --allowedTools "$GIT_TOOLS $PYTHON_TOOLS $SHELL_TOOLS $FILE_TOOLS $CODEX_TOOLS" \
+    --allowedTools "$GIT_TOOLS $PYTHON_TOOLS $SHELL_TOOLS $FILE_TOOLS $REVIEW_TOOLS" \
     "I'm here to hack on this repo. Ask me what I want to do."
 AGENT_EXIT_CODE=$?
 set -e

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_NAME="${1:?Usage: clone <repo-name> [feature-name]}"
+REPO_NAME="${1:?Usage: agent-clone <repo-name> [feature-name]}"
 FEATURE_NAME="${2:-}"
 WORKSPACE="$(pwd)"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
