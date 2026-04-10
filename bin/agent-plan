@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CLONE_DIR="${1:?Usage: agent-plan <clone-dir> [feature-name]}"
-FEATURE_NAME="${2:-}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 AGENT_SYSTEM_DIR="$(dirname "$SCRIPT_DIR")"
-WORKSPACE="$(dirname "$AGENT_SYSTEM_DIR")"
 PROMPT_FILE="${AGENT_SYSTEM_DIR}/prompts/plan.md"
 
 # shellcheck source=../lib/allowed-tools.sh
@@ -14,22 +11,35 @@ source "${AGENT_SYSTEM_DIR}/lib/allowed-tools.sh"
 # shellcheck source=../lib/agent-session.sh
 source "${AGENT_SYSTEM_DIR}/lib/agent-session.sh"
 
-# --- Resolve clone dir ---
-if [[ ! -d "$CLONE_DIR" ]] && [[ -d "${WORKSPACE}/${CLONE_DIR}" ]]; then
-    CLONE_DIR="${WORKSPACE}/${CLONE_DIR}"
-fi
+# --- Use current directory and branch ---
+REPO_DIR="$(pwd)"
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
-if [[ ! -d "$CLONE_DIR" ]]; then
-    echo "ERROR: Directory not found at $CLONE_DIR"
+# --- Validate branch format: <user>/<ticket>/<feature-name> ---
+branch_slash_count=$(echo "$BRANCH" | tr -cd '/' | wc -c)
+if [[ "$branch_slash_count" -ne 2 ]]; then
+    echo "ERROR: Branch '${BRANCH}' does not follow the required format: <user>/<ticket>/<feature-name>"
+    echo "       Example: eric-shaw/PROJ-123/add-oauth-login"
     exit 1
 fi
 
-# Canonicalize to absolute path so cleanup works after cd
-CLONE_DIR="$(cd "$CLONE_DIR" && pwd)"
+BRANCH_USER="${BRANCH%%/*}"
+_remainder="${BRANCH#*/}"
+BRANCH_TICKET="${_remainder%%/*}"
+BRANCH_FEATURE="${_remainder#*/}"
+
+if [[ -z "$BRANCH_USER" || -z "$BRANCH_TICKET" || -z "$BRANCH_FEATURE" ]]; then
+    echo "ERROR: Branch '${BRANCH}' has empty components. Expected: <user>/<ticket>/<feature-name>"
+    exit 1
+fi
+
+# --- Derive plan filename ---
+TODAY="$(date +%Y-%m-%d)"
+PLAN_FILE="${TODAY}-${BRANCH_TICKET}-${BRANCH_FEATURE}.md"
 
 # --- Detect DataRobot context ---
 DR_PLANS_DIR="/home/eric-shaw/workspace/dr-repo-claude-plans"
-if [[ "$CLONE_DIR" == /home/eric-shaw/workspace/DataRobot* ]]; then
+if [[ "$REPO_DIR" == /home/eric-shaw/workspace/DataRobot* ]]; then
     PLANS_DIR="$DR_PLANS_DIR"
 else
     PLANS_DIR="claude_plans"
@@ -40,37 +50,33 @@ if [[ ! -f "$PROMPT_FILE" ]]; then
     exit 1
 fi
 
-# --- Update feature name in session if provided ---
-if [[ -n "$FEATURE_NAME" ]]; then
-    write_agent_session "$CLONE_DIR" "feature=${FEATURE_NAME}"
-fi
+# --- Update session with feature name from branch ---
+write_agent_session "$REPO_DIR" "feature=${BRANCH_FEATURE}"
 
 # --- Set tab title ---
-eval "$(read_agent_session "$CLONE_DIR")" 2>/dev/null || true
-TAB_LABEL="${SESSION_feature:-$(basename "$CLONE_DIR")}"
-set_tab_title "PLAN: ${TAB_LABEL}"
+set_tab_title "PLAN: ${BRANCH_FEATURE}"
 
 # --- Update session marker to running ---
-write_agent_session "$CLONE_DIR" state=running agent=plan "pid=$$" "started_at=$(date +%s)"
+write_agent_session "$REPO_DIR" state=running agent=plan "pid=$$" "started_at=$(date +%s)"
 
 # --- Trap: update marker and reset tab on exit ---
 AGENT_EXIT_CODE=0
 cleanup() {
     if [[ "$AGENT_EXIT_CODE" -eq 0 ]]; then
-        write_agent_session "$CLONE_DIR" state=done "pid=" "finished_at=$(date +%s)"
+        write_agent_session "$REPO_DIR" state=done "pid=" "finished_at=$(date +%s)"
     else
-        write_agent_session "$CLONE_DIR" state=interrupted "pid=" "finished_at=$(date +%s)"
+        write_agent_session "$REPO_DIR" state=interrupted "pid=" "finished_at=$(date +%s)"
     fi
     reset_tab_title
 }
 trap cleanup EXIT
 
-# --- Build user prompt ---
-if [[ -n "$FEATURE_NAME" ]]; then
-    USER_PROMPT="I want to plan '${FEATURE_NAME}'. The plan should end up in ${PLANS_DIR}/. Let's get started — what do you need to know?"
-else
-    USER_PROMPT="I want to plan a feature. Before we start, ask me the name of what we're building. The plan should end up in ${PLANS_DIR}/. Let's get started — what do you need to know?"
-fi
+# --- Announce context ---
+echo "==> Starting plan session"
+echo "    Directory: $REPO_DIR"
+echo "    Branch:    $BRANCH"
+echo "    Plan file: ${PLANS_DIR}/${PLAN_FILE}"
+echo ""
 
 # --- Build system prompt ---
 SYSTEM_PROMPT="$(cat "$PROMPT_FILE")"
@@ -78,15 +84,11 @@ if [[ "$PLANS_DIR" == "$DR_PLANS_DIR" ]]; then
     SYSTEM_PROMPT+=$'\n\nIMPORTANT: This is a DataRobot repo. Write and commit ALL plans to '"${DR_PLANS_DIR}/"$' — NOT to claude_plans/ in this repo. When running the review command, use the full path: agent-plan-review '"${DR_PLANS_DIR}/"$'<filename>.md'
 fi
 
-echo "==> Starting plan session in $CLONE_DIR"
-echo ""
-
-cd "$CLONE_DIR"
 set +e
 claude \
     --permission-mode acceptEdits \
     --append-system-prompt "$SYSTEM_PROMPT" \
     --allowedTools "$GIT_READ_TOOLS $SHELL_TOOLS $REVIEW_TOOLS $FILE_TOOLS" \
-    "$USER_PROMPT"
+    "I want to plan '${BRANCH_FEATURE}' (ticket: ${BRANCH_TICKET}). Write the plan to ${PLANS_DIR}/${PLAN_FILE}. Let's get started — what do you need to know?"
 AGENT_EXIT_CODE=$?
 set -e
