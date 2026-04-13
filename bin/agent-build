@@ -86,11 +86,12 @@ ALLOWED_TOOLS="$GIT_TOOLS $PYTHON_TOOLS $REVIEW_TOOLS $SHELL_TOOLS $FILE_TOOLS"
 
 cd "$CODE_DIR"
 set +e
+export PLAN_FILE
 claude \
     --permission-mode acceptEdits \
-    --append-system-prompt "$(cat "$PROMPT_FILE")" \
+    --append-system-prompt "$(envsubst < "$PROMPT_FILE")" \
     --allowedTools "$ALLOWED_TOOLS" \
-    "Read the feature spec at ${PLAN_FILE}, understand the codebase, and build the feature."
+    "Build the feature."
 AGENT_EXIT_CODE=$?
 set -e
 
